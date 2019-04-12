@@ -1,28 +1,71 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import PersonList from './components/PersonList';
+import PersonDetails from './components/PersonDetails';
+import axios from 'axios';
 
 class App extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      people: []
+    }
+  }
+
+  componentDidMount() {
+    this.getData();
+  }
+
+  getData = async () => {
+    try {
+      const res = await axios.get('https://jsonplaceholder.typicode.com/users');
+      const people = await res.data;
+      this.setState({
+        people
+      })
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  searchPerson = (e) => {
+    const { people } = this.state;
+    let searchValue = e.target.value.toLowerCase();
+
+    if (searchValue !== '') {
+      const newList = people.filter(person => {
+        let personName = person.name.toLowerCase();
+        return personName.indexOf(searchValue) !== -1
+      })
+
+      this.setState({
+        people: newList
+      })
+    } else {
+      this.getData();
+    }
+
+  }
+
   render() {
+    const { people } = this.state;
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
+      <Router>
+        <Navbar searchPerson={this.searchPerson} />
+        <Switch>
+          <Route exact path='/' component={(props) => <PersonList {...props} people={people} />} />
+          <Route path='/person/:id' component={(props) => <PersonDetails {...props} people={people} />} />
+        </Switch>
+      </Router >
+    )
   }
 }
 
-export default App;
+export default App
+
+
+
+
+
